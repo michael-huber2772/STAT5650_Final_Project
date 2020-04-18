@@ -1,0 +1,64 @@
+####################################################
+############# CLASSIFICATION TREE ##################
+####################################################
+
+hotel <- read.csv("~/Uni/Stat 5650 SLDM1/Final Project/hotel.csv")
+View(hotel)
+
+hotel1 = subset(na.omit(hotel), select = -c(country, agent, company, reservation_status, reservation_status_date))
+
+set.seed(5341)
+library(rpart)
+library(verification)
+
+#### Fully Grown Tree to Determine Tree Size ####
+
+hotel1.rpart=rpart(is_canceled~.,data=hotel1,method="class",control=rpart.control(cp=0.0,minsplit=2))
+plot(hotel1.rpart,margin=0.1)
+plotcp(hotel1.rpart)
+printcp(hotel1.rpart)
+
+#### 11 splits ####
+hotel1.rpart11=rpart(is_canceled~.,data=hotel1,method="class",control=rpart.control(cp=1.2890e-03,minsplit=2))
+plot(hotel1.rpart11, margin=0.1)
+text(hotel1.rpart11,use.n=TRUE)
+
+#### CROSS VALIDATION ACCURACY FOR 11 SPLITS####
+set.seed(5341)
+
+xvs=rep(c(1:10),length=nrow(hotel1))
+xvs=sample(xvs)
+hotel1.rpart11.xval=rep(0,length(nrow(hotel1)))
+for(i in 1:10){
+	train=hotel1[xvs!=i,]
+	test=hotel1[xvs==i,]
+	rp=rpart(is_canceled~ . 
+,method="class",data=train,control=rpart.control(cp=0.0,minsplit=2))
+	hotel1.rpart11.xval[xvs==i]=predict(rp,test,type="prob")[,2]
+	}
+
+table(hotel1$is_canceled,round(hotel1.rpart11.xval))
+class.sum(hotel1$is_canceled,hotel1.rpart11.xval)
+
+#### 5 splits ####
+hotel1.rpart5=rpart(is_canceled~.,data=hotel1,method="class",control=rpart.control(cp=1.2981e-02,minsplit=2))
+plot(hotel1.rpart5, margin=0.1)
+text(hotel1.rpart5,use.n=TRUE)
+
+
+#### CROSS VALIDATION ACCURACY FOR 5 SPLITS####
+set.seed(5341)
+
+xvs=rep(c(1:10),length=nrow(hotel1))
+xvs=sample(xvs)
+hotel1.rpart5.xval=rep(0,length(nrow(hotel1)))
+for(i in 1:10){
+	train=hotel1[xvs!=i,]
+	test=hotel1[xvs==i,]
+	rp=rpart(is_canceled~ . 
+,method="class",data=train,control=rpart.control(cp=0.0,minsplit=2))
+	hotel1.rpart5.xval[xvs==i]=predict(rp,test,type="prob")[,2]
+	}
+
+table(hotel1$is_canceled,round(hotel1.rpart5.xval))
+class.sum(hotel1$is_canceled,hotel1.rpart5.xval)
