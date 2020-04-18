@@ -18,6 +18,7 @@ plot(hotel1.rpart,margin=0.1)
 plotcp(hotel1.rpart)
 printcp(hotel1.rpart)
 
+
 #### 11 splits ####
 hotel1.rpart11=rpart(is_canceled~.,data=hotel1,method="class",control=rpart.control(cp=1.2890e-03,minsplit=2))
 plot(hotel1.rpart11, margin=0.1)
@@ -40,11 +41,11 @@ for(i in 1:10){
 table(hotel1$is_canceled,round(hotel1.rpart11.xval))
 class.sum(hotel1$is_canceled,hotel1.rpart11.xval)
 
+
 #### 5 splits ####
 hotel1.rpart5=rpart(is_canceled~.,data=hotel1,method="class",control=rpart.control(cp=1.2981e-02,minsplit=2))
 plot(hotel1.rpart5, margin=0.1)
 text(hotel1.rpart5,use.n=TRUE)
-
 
 #### CROSS VALIDATION ACCURACY FOR 5 SPLITS####
 set.seed(5341)
@@ -62,3 +63,100 @@ for(i in 1:10){
 
 table(hotel1$is_canceled,round(hotel1.rpart5.xval))
 class.sum(hotel1$is_canceled,hotel1.rpart5.xval)
+
+
+
+#####################################
+####### Separated Hotel Types #######
+
+##Fully Grown Resort##
+ResortHotel = droplevels(subset(hotel1, hotel=="Resort Hotel", select=-hotel))
+
+ResortHotel.rpart=rpart(is_canceled~.,data=ResortHotel,method="class",control=rpart.control(cp=0.0,minsplit=2))
+plot(ResortHotel.rpart,margin=0.1)
+plotcp(ResortHotel.rpart)
+printcp(ResortHotel.rpart)
+
+
+##7 Splits Resort##
+ResortHotel.rpart7=rpart(is_canceled~.,data=ResortHotel,method="class",control=rpart.control(cp=7.7324e-03,minsplit=2))
+plot(ResortHotel.rpart7, margin=0.1)
+text(ResortHotel.rpart7,use.n=TRUE)
+
+#### CROSS VALIDATION ACCURACY FOR RESORT, 7 SPLITS####
+set.seed(5341)
+
+xvs=rep(c(1:10),length=nrow(ResortHotel))
+xvs=sample(xvs)
+ResortHotel.rpart7.xval=rep(0,length(nrow(ResortHotel)))
+for(i in 1:10){
+	train=ResortHotel[xvs!=i,]
+	test=ResortHotel[xvs==i,]
+	rp=rpart(is_canceled~ . 
+,method="class",data=train,control=rpart.control(cp=0.0,minsplit=2))
+	ResortHotel.rpart7.xval[xvs==i]=predict(rp,test,type="prob")[,2]
+	}
+
+table(ResortHotel$is_canceled,round(ResortHotel.rpart7.xval))
+class.sum(ResortHotel$is_canceled,ResortHotel.rpart7.xval)
+
+
+##Fully Grown City##
+CityHotel = droplevels(subset(hotel1, hotel=="City Hotel",select=-hotel))
+
+CityHotel.rpart=rpart(is_canceled~.,data=CityHotel,method="class",control=rpart.control(cp=0.0,minsplit=2))
+plot(CityHotel.rpart,margin=0.1)
+plotcp(CityHotel.rpart)
+printcp(CityHotel.rpart)
+
+
+##6 Splits City##
+CityHotel.rpart6=rpart(is_canceled~.,data=CityHotel,method="class",control=rpart.control(cp=8.6712e-03,minsplit=2))
+plot(CityHotel.rpart6, margin=0.1)
+text(CityHotel.rpart6,use.n=TRUE)
+
+#### CROSS VALIDATION ACCURACY FOR CITY, 6 SPLITS####
+set.seed(5341)
+
+xvs=rep(c(1:10),length=nrow(CityHotel))
+xvs=sample(xvs)
+CityHotel.rpart6.xval=rep(0,length(nrow(CityHotel)))
+for(i in 1:10){
+	train=CityHotel[xvs!=i,]
+	test=CityHotel[xvs==i,]
+	rp=rpart(is_canceled~ . 
+,method="class",data=train,control=rpart.control(cp=0.0,minsplit=2))
+	CityHotel.rpart6.xval[xvs==i]=predict(rp,test,type="prob")[,2]
+	}
+
+table(CityHotel$is_canceled,round(CityHotel.rpart6.xval))
+class.sum(CityHotel$is_canceled,CityHotel.rpart6.xval)
+
+
+
+
+#####################################
+######### Hotel As Response...THIS ONE MIGHT BE MESSED UP #########
+
+hotelchanged <- read.csv("~/Uni/Stat 5650 SLDM1/Final Project/STAT5650_Final_Project/Greg/hotelchanged.csv")
+
+hotelchanged.rpart=rpart(hotel~.,data=hotelchanged,method="class",control=rpart.control(cp=0.0,minsplit=2))
+plot(hotelchanged.rpart,margin=0.1)
+plotcp(hotelchanged.rpart)
+printcp(hotelchanged.rpart)
+
+#### CROSS VALIDATION CONFUSION MATRIX FOR HOTEL AS RESPONSE ####
+set.seed(5341)
+
+xvs=rep(c(1:10),length=nrow(hotelchanged))
+xvs=sample(xvs)
+hotelchanged.rpart.xval=rep(0,length(nrow(hotelchanged)))
+for(i in 1:10){
+	train=hotelchanged[xvs!=i,]
+	test=hotelchanged[xvs==i,]
+	rp=rpart(hotel~ . 
+,method="class",data=train,control=rpart.control(cp=0.0,minsplit=2))
+	hotelchanged.rpart.xval[xvs==i]=predict(rp,test,type="prob")[,2]
+	}
+
+table(hotelchanged$hotel,round(hotelchanged.rpart.xval))
