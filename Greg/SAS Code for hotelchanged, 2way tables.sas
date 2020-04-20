@@ -55,9 +55,9 @@ run;
 
 data hotel1; /*looks better, and cutoff of 12 is based on classification tree's split of lead time at 11.5*/
 	set hotel;
-	length lead $15;
-	if lead_time<12 then lead = "a: under 12";
-	else lead = "b: 12 and over";
+	length LeadTime $15;
+	if lead_time<15 then LeadTime = "a: under 15";
+	else LeadTime = "b: 15 and over";
 	
 	drop country agent company reservation_status_date reservation_status;
 run;
@@ -76,69 +76,69 @@ run;
 
 ods pdf file="/folders/myfolders/Stat5650/output/impvar2waytables.pdf";
 
-title1 "cancelation by important predictor variables";
+title1 "Cancelation by Important Predictors:";
 title2 "deposit_type";
-title3 "combined";
+title3 "Combined Data";
 proc freq data=hotel1;
 	tables deposit_type*is_canceled / nocol;
 run;
 
-title3 "resort";
+title3 "Resort Hotels";
 proc freq data=resorthotel;
 	tables deposit_type*is_canceled / nocol;
 run;
 
-title3 "City";
+title3 "City Hotels";
 proc freq data=cityhotel;
 	tables deposit_type*is_canceled / nocol;
 run;
 
 title2 "lead_time";
-title3 "combined";
+title3 "Combined Data";
 
 proc freq data=hotel1;
 	tables lead*is_canceled / nocol;
 run;
 
-title3 "resort";
+title3 "Resort Hotels";
 proc freq data=resorthotel;
 	tables lead*is_canceled / nocol;
 run;
 
-title3 "city";
+title3 "City Hotels";
 proc freq data=cityhotel;
 	tables lead*is_canceled / nocol;
 run;
 
 title2 "market_segment";
-title3 "combined";
+title3 "Combined Data";
 proc freq data=hotel1;
 	tables market_segment*is_canceled / nocol;
 run;
 
-title3 "resort";
+title3 "Resort Hotels";
 proc freq data=resorthotel;
 	tables market_segment*is_canceled / nocol;
 run;
 
-title3 "city";
+title3 "City Hotels";
 proc freq data=cityhotel;
 	tables market_segment*is_canceled / nocol;
 run;
 
 title2 "total_of_special_requests";
-title3 "combined";
+title3 "Combined Data";
 
 proc freq data=hotel1;
 	tables total_of_special_requests*is_canceled / nocol;
 run;
 
-title3 "resort";
+title3 "Resort Hotels";
 proc freq data=resorthotel;
 	tables total_of_special_requests*is_canceled / nocol;
 run;
 
-title3 "city";
+title3 "City Hotels";
 proc freq data=cityhotel;
 	tables total_of_special_requests*is_canceled / nocol;
 run;
