@@ -1,0 +1,58 @@
+#########################
+### ADABOOST-Defaults ###
+#########################
+
+hotel1.ada=ada(as.factor(is_canceled)~ . ,loss="exponential",data=hotel1)
+
+#### Crossvalidation ####
+set.seed(5341)
+hotel1.ada.xvalpr=rep(0,nrow(hotel1))
+xvs=rep(1:10,length=nrow(hotel1))
+xvs=sample(xvs)
+for(i in 1:10){
+      train=hotel1[xvs!=i,]
+      test=hotel1[xvs==i,]
+      glub=ada(as.factor(is_canceled)~ . ,loss="exponential",data=train)
+      hotel1.ada.xvalpr[xvs==i]=predict(glub,newdata=test,type="prob")[,2]
+}
+
+table(hotel1$is_canceled,round(hotel1.ada.xvalpr))
+class.sum(hotel1$is_canceled,hotel1.ada.xvalpr)
+
+##############################
+#### SEPARATE HOTEL TYPES ####
+
+ResortHotel.ada=ada(as.factor(is_canceled)~ . ,loss="exponential",data=ResortHotel)
+
+#### Crossvalidation ####
+set.seed(5341)
+ResortHotel.ada.xvalpr=rep(0,nrow(ResortHotel))
+xvs=rep(1:10,length=nrow(ResortHotel))
+xvs=sample(xvs)
+for(i in 1:10){
+      train=ResortHotel[xvs!=i,]
+      test=ResortHotel[xvs==i,]
+      glub=ada(as.factor(is_canceled)~ . ,loss="exponential",data=train)
+      ResortHotel.ada.xvalpr[xvs==i]=predict(glub,newdata=test,type="prob")[,2]
+}
+
+table(ResortHotel$is_canceled,round(ResortHotel.ada.xvalpr))
+class.sum(ResortHotel$is_canceled,ResortHotel.ada.xvalpr)
+
+#### City ####
+CityHotel.ada=ada(as.factor(is_canceled)~ . ,loss="exponential",data=CityHotel)
+
+#### Crossvalidation ####
+set.seed(5341)
+CityHotel.ada.xvalpr=rep(0,nrow(CityHotel))
+xvs=rep(1:10,length=nrow(CityHotel))
+xvs=sample(xvs)
+for(i in 1:10){
+      train=CityHotel[xvs!=i,]
+      test=CityHotel[xvs==i,]
+      glub=ada(as.factor(is_canceled)~ . ,loss="exponential",data=train)
+      CityHotel.ada.xvalpr[xvs==i]=predict(glub,newdata=test,type="prob")[,2]
+}
+
+table(CityHotel$is_canceled,round(CityHotel.ada.xvalpr))
+class.sum(CityHotel$is_canceled,CityHotel.ada.xvalpr)
