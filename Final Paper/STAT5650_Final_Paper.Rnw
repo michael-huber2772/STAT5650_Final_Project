@@ -90,79 +90,111 @@ Final Project: Applying Prediction Methods to Hotel Data } \\
 
 \begin{enumerate}
 
-\item \underline{\bf Prediction Method 1:}
+\item \underline{\bf Prediction Methods:}
 After working with the data and reviewing the notes from Dr. Cutler on our project proposal
 we had to edit what methods of prediction we were going to apply against the data. Below is
 a list of methods that we were able to get to run against our hotel data set.
 
+\begin{itemize}
+\item Gradient Boosting Machines (GBM)
+\item Support Vector Machines (SVM)
+\item Random Forests
+\item Adaboost
+\item Classification Trees
+\end{itemize}
 
-\begin{enumerate}
-\item (1 Point) Load all required R packages to answer this question. Show your R code.
 
 <<echo=FALSE>>=
 library(ggplot2)
 library(gridExtra)
 library(MASS)
 library(vioplot)
+
+library(verification)
+library(caret)
+library(e1071) # SVM
+library(gbm) # GBM
+
+hotel = read.csv("../Data/hotel_bookings.csv")
+@
+
+
+<<echo=FALSE>>=
+kappa=function(x){
+      n=sum(x)
+      pobs=(x[1,1]+x[2,2])/n
+      pexp=(sum(x[1,])*sum(x[,1])+sum(x[2,])*sum(x[,2]))/n^2
+      kappa=(pobs-pexp)/(1-pexp)
+      t1=0
+      t2=0
+      t3=0
+      pii=x/n
+      pidot=apply(pii,1,sum)
+      pdotj=apply(pii,2,sum)
+      for(i in 1:2){
+            t1 = t1 + pii[i,i]*((1-pexp) - (1-pobs)*(pidot[i]+pdotj[i]))^2
+      }
+      t2 = pii[1,2]*(pdotj[1]+pidot[2])^2 + pii[2,1]*(pdotj[2] + pidot[1])^2
+      t3 = (pobs*pexp-2*pexp+pobs)^2
+      vhat = (t1 + t2*(1-pobs)^2 -t3)/(n*(1-pexp)^4)
+      se=sqrt(vhat)
+      return(c(kappa,se))
+}
+
+
+class.sum=function(truth,predicted){
+     xt=table(truth,round(predicted+0.000001))
+     pcc=round(100*sum(diag(xt))/sum(xt),2)
+     spec=round(100*xt[1,1]/sum(xt[1,]),2)
+     sens=round(100*xt[2,2]/sum(xt[2,]),2)
+     kap=round(kappa(xt)[1],4)
+     au=round(roc.area(truth,predicted)$A,4)
+     return(cbind(c("Percent Correctly Classified = ","Specificity = ","Sensitivity = ","Kappa =","AUC= "),c(pcc,spec,sens,kap,au)))
+     }
 @
 
 
 
+\item \underline{\bf Untuned Support Vector Machines:}
 
-
-\item (1 Point) <first requirement with code>
-
-<<fig=TRUE, echo=FALSE>>=
-data <- faithful
-
-ggplot(data, aes(x = eruptions)) + 
-  geom_histogram()
+<<echo=FALSE>>=
+# set.seed(424)
+# hotel_samp = hotel[sample(nrow(hotel), 4000), ]
+# data = hotel_samp
+# 
+# hotel.svm.xvalpred=rep(0,nrow(data))
+# xvs=rep(1:10,length=nrow(data))
+# xvs=sample(xvs)
+# for(i in 1:10){
+#       train=data[xvs!=i,]
+#       test=data[xvs==i,]
+#       glub=svm(as.factor(is_canceled)~ . - reservation_status,probability=TRUE,data=train)
+#       hotel.svm.xvalpred[xvs==i]=attr(predict(glub,test,probability=TRUE),"probabilities")[,2]
+# }
+# 
+# table(data$is_canceled,round(hotel.svm.xvalpred))
+# class.sum(data$is_canceled,hotel.svm.xvalpred)
 @
 
 
+\item \underline{\bf Untuned Gradient Boosting Machines:}
 
-\underline{Answer:}
-\begin{itemize}
-\item <Answer Part 1>
-\item <Answer Part 2>
-\end{itemize}
-
-
-
-
-
-\item (1 Point) Repeat (b) from above, now using the {\it hist} function from baseR.
-
-<<fig=TRUE>>=
-hist(faithful$eruptions)
+<<echo=FALSE>>=
+# set.seed(424)
+# hotel.gbm.xvalpr=rep(0,nrow(data))
+# xvs=rep(1:10,length=nrow(data))
+# xvs=sample(xvs)
+# for(i in 1:10){
+#       train=data[xvs!=i,]
+#       test=data[xvs==i,]
+#       glub=gbm(is_canceled~ . - reservation_status,distribution="bernoulli",n.trees=5000,data=train)
+#       hotel.gbm.xvalpr[xvs==i]=predict(glub,newdata=test,type="response",n.trees=5000)
+# }
+# 
+# table(data$is_canceled,round(hotel.gbm.xvalpr))
+# class.sum(data$is_canceled,hotel.gbm.xvalpr)
 @
 
-
-
-
-
-\item (3 Points) Repeat (c) from above, now using the {\it hist} function from baseR.
-
-<<fig=TRUE>>=
-hist(faithful$eruptions,
-     breaks = seq(1, 6, .5),
-     xlab = "Eruption Time in Minutes",
-     ylab = "Count of Eruptions",
-     main = "Old Faithful Eruption Data Histogram",
-     col = "light blue",
-     las = 1,
-     ylim = c(0, 100),
-     xlim = c(1, 6))
-@
-
-\underline{Answer:}
-\begin{itemize}
-\item <Answer Part 1>
-\item <Answer Part 2>
-\end{itemize}
-
-
-\end{enumerate}
 
 
 \newpage
