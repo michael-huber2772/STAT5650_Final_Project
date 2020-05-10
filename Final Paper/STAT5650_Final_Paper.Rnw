@@ -74,13 +74,13 @@ STAT 5650 Statistical Learning and Data Mining 1 & \hspace*{0.5 in} & Spring 202
 {\bf Names:} Greg Hoffmann, Kristen Sohm, Michael Huber, Varsha Reddy Mandadi} \\
  & & \\
 \multicolumn{3}{|c|}{
-{\bf Submission Date:} 04/22/2020} \\
+{\bf Submission Date:} 04/25/2020} \\
  & & \\
 \multicolumn{3}{|c|}{
 Final Project: Applying Prediction Methods to Hotel Data } \\
  & & \\
 \multicolumn{3}{|c|}{
-200 Points --- Due Friday 10/18/2019 (via Canvas by 11:59pm)} \\
+210 Points --- Due Monday 04/27/2020 (via Canvas by 11:59pm)} \\
 \hline
 \end{tabular*}
 \end{table}
@@ -112,10 +112,16 @@ library(vioplot)
 
 library(verification)
 library(caret)
+library(rpart)
 library(e1071) # SVM
 library(gbm) # GBM
 
 hotel = read.csv("../Data/hotel_bookings.csv")
+Hotel_data<- read.csv(file = "../Data/hotelchanged.csv")
+@
+
+<<echo=FALSE>>=
+hotel1 = subset(na.omit(hotel), select = -c(country, agent, company, reservation_status, reservation_status_date))
 @
 
 
@@ -154,151 +160,55 @@ class.sum=function(truth,predicted){
 @
 
 
+\item \underline{\bf Classification Trees:}
+
+To prepare the data for the classification tree we subset the data and removed the following
+columns from the data set: country, agent, company, reservation status, reservation status date.
+
 
 \item \underline{\bf Untuned Support Vector Machines:}
 
 <<echo=FALSE>>=
-# set.seed(424)
-# hotel_samp = hotel[sample(nrow(hotel), 4000), ]
-# data = hotel_samp
-# 
-# hotel.svm.xvalpred=rep(0,nrow(data))
-# xvs=rep(1:10,length=nrow(data))
-# xvs=sample(xvs)
-# for(i in 1:10){
-#       train=data[xvs!=i,]
-#       test=data[xvs==i,]
-#       glub=svm(as.factor(is_canceled)~ . - reservation_status,probability=TRUE,data=train)
-#       hotel.svm.xvalpred[xvs==i]=attr(predict(glub,test,probability=TRUE),"probabilities")[,2]
-# }
-# 
-# table(data$is_canceled,round(hotel.svm.xvalpred))
-# class.sum(data$is_canceled,hotel.svm.xvalpred)
+set.seed(424)
+hotel_samp = hotel[sample(nrow(hotel), 4000), ]
+data = hotel_samp
+
+hotel.svm.xvalpred=rep(0,nrow(data))
+xvs=rep(1:10,length=nrow(data))
+xvs=sample(xvs)
+for(i in 1:10){
+      train=data[xvs!=i,]
+      test=data[xvs==i,]
+      glub=svm(as.factor(is_canceled)~ . - reservation_status,probability=TRUE,data=train)
+      hotel.svm.xvalpred[xvs==i]=attr(predict(glub,test,probability=TRUE),"probabilities")[,2]
+}
+
+table(data$is_canceled,round(hotel.svm.xvalpred))
+class.sum(data$is_canceled,hotel.svm.xvalpred)
 @
 
+
+~ \newpage
 
 \item \underline{\bf Untuned Gradient Boosting Machines:}
 
 <<echo=FALSE>>=
-# set.seed(424)
-# hotel.gbm.xvalpr=rep(0,nrow(data))
-# xvs=rep(1:10,length=nrow(data))
-# xvs=sample(xvs)
-# for(i in 1:10){
-#       train=data[xvs!=i,]
-#       test=data[xvs==i,]
-#       glub=gbm(is_canceled~ . - reservation_status,distribution="bernoulli",n.trees=5000,data=train)
-#       hotel.gbm.xvalpr[xvs==i]=predict(glub,newdata=test,type="response",n.trees=5000)
-# }
-# 
-# table(data$is_canceled,round(hotel.gbm.xvalpr))
-# class.sum(data$is_canceled,hotel.gbm.xvalpr)
+set.seed(424)
+hotel.gbm.xvalpr=rep(0,nrow(data))
+xvs=rep(1:10,length=nrow(data))
+xvs=sample(xvs)
+for(i in 1:10){
+      train=data[xvs!=i,]
+      test=data[xvs==i,]
+      glub=gbm(is_canceled~ . - reservation_status,distribution="bernoulli",n.trees=5000,data=train)
+      hotel.gbm.xvalpr[xvs==i]=predict(glub,newdata=test,type="response",n.trees=5000)
+}
+
+table(data$is_canceled,round(hotel.gbm.xvalpr))
+class.sum(data$is_canceled,hotel.gbm.xvalpr)
 @
 
-
-
-\newpage
-
-
-\item \underline{\bf Question 2:}
-<Description of Question 2>
-
-
-\begin{enumerate}
-\item (6 Points) Recreate the graphs (and layout) below using baseR.
-Use a ruler to  check that the width and height proportions in your graphs
-match the ones I have used. I worked with integer multiples!
-Include your R code and the resulting graphs.
-Hint: You can create a new line via \verb|\n| without any extra spaces before/after \verb|\n|.
-
-<<fig=TRUE>>=
-grid <- matrix(c(1, 1, 1, 2, 2, 3, 3, 3, 4, 4), 
-              nrow = 2, ncol = 5, byrow = TRUE)
-
-layout(grid)
-
-par(mar = c(4, 3, 4, 2))
-boxplot(geyser$duration,
-        horizontal = TRUE,
-        main = "Old Faithful:\n Duration",
-        ylim = c(0, 6))
-hist(geyser$duration,
-     main = "Old Faithful",
-     xlab = "Duration",
-     ylab = "Count",
-     xlim = c(0, 6))
-boxplot(geyser$waiting,
-        horizontal = TRUE,
-        main = "Old Faithful:\n Waiting",
-        ylim = c(40, 120))
-hist(geyser$waiting,
-     main = "Old Faithful",
-     xlab = "Waiting",
-     ylab = "Count",
-     xlim = c(40, 120),
-     ylim = c(0, 100),
-     breaks = seq(40, 120, by = 10))
-@
-\underline{Refernces:}
-\begin{itemize}
-\item https://www.statmethods.net/advgraphs/layout.html
-\item https://stackoverflow.com/questions/31319942/change-the-size-of-a-plot-when-plotting-multiple-plots-in-r
-\item https://www.youtube.com/watch?v=Z3V4Pbxeahg
-\end{itemize}
-
-
-
-
-\newpage
-
-
-\item (2 Points) Recreate the graph below using ggplot2.
-Include your R code and the resulting graph.
-
-<<fig=TRUE>>=
-ggplot(geyser, aes(x=duration, y=waiting)) +
-  geom_point() +
-  xlab("Duration") +
-  ylab("Waiting") +
-  xlim(0, 6) +
-  ylim(40, 120) +
-  ggtitle("Old Faithful Data") +
-  theme(plot.title = element_text(hjust = 0.5))
-@
-
-
-
-
-\newpage
-
-
-\item (2 Points) Doesn't the scatterplot in (b) above look rather different 
-than the scatterplot in Question 1 (j)? Note that the help page for {\it geyser}
-states \verb|waiting	 numeric	 Waiting time for this eruption| and \\
-\verb|The waiting time was incorrectly described as the time to the next|
-\verb|eruption in the original files, and corrected for MASS version 7.3-30.| \\
-Use this information to create a basic scatterplot 
-for the {\it geyser} data that matches the overall 
-appearance in Question 1 (j). 
-Include your R code and the resulting graph.
-No need to refine this scatterplot.
-
-<<fig=TRUE>>=
-duration <- geyser$duration[1:298]
-waiting <- geyser$waiting[2:299]
-
-
-df <- data.frame(duration, waiting)
-
-ggplot(df, aes(x = duration, y = waiting )) + 
-         geom_point()
-@
-
-\underline{Answer:} 
-The geyser data appears to have a negative correlation with three clusters where the faithful data has a positive correlation with 2 clusters.
-
-
-\end{enumerate}
+\item \underline{\bf Untuned Gradient Boosting Machines:}
 
 \end{enumerate}
 
@@ -308,13 +218,6 @@ The geyser data appears to have a negative correlation with three clusters where
 
 \noindent{\Large \bf General Instructions}~\\
 
-\begin{enumerate}
-
-\item <Instruction 1>
-
-\item <Instruction 2>
-
-\end{enumerate}
 
 
 \end{document}

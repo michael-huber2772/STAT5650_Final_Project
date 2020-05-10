@@ -1,0 +1,226 @@
+---
+title: "Hotels"
+author: "Kristen Sohm"
+date: "4/16/2020"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+```{r}
+library(rpart)
+library(verification)
+library(klaR)
+library(dplyr)
+```
+
+```{r}
+kappa=function(x){
+  n=sum(x)
+  pobs=(x[1,1]+x[2,2])/n
+  pexp=(sum(x[1,])*sum(x[,1])+sum(x[2,])*sum(x[,2]))/n^2
+  kappa=(pobs-pexp)/(1-pexp)
+  t1=0
+  t2=0
+  t3=0
+  pii=x/n
+  pidot=apply(pii,1,sum)
+  pdotj=apply(pii,2,sum)
+  for(i in 1:2){
+    t1 = t1 + pii[i,i]*((1-pexp) - (1-pobs)*(pidot[i]+pdotj[i]))^2
+  }
+  t2 = pii[1,2]*(pdotj[1]+pidot[2])^2 + pii[2,1]*(pdotj[2] + pidot[1])^2
+  t3 = (pobs*pexp-2*pexp+pobs)^2
+  vhat = (t1 + t2*(1-pobs)^2 -t3)/(n*(1-pexp)^4)
+  se=sqrt(vhat)
+  return(c(kappa,se))
+}
+
+
+class.sum=function(truth,predicted){
+  xt=table(truth,round(predicted+0.000001))
+  pcc=round(100*sum(diag(xt))/sum(xt),2)
+  spec=round(100*xt[1,1]/sum(xt[1,]),2)
+  sens=round(100*xt[2,2]/sum(xt[2,]),2)
+  kap=round(kappa(xt)[1],4)
+  au=round(roc.area(truth,predicted)$A,4)
+  return(cbind(c("Percent Correctly Classified = ","Specificity = ","Sensitivity = ","Kappa =","AUC= "),c(pcc,spec,sens,kap,au)))
+}
+
+```
+Variables for Hotel Data:
+```{r}
+HotelData=read.csv('C:/Users/krist/Documents/STAT5650/data/hotel_bookings.csv')
+#HotelData
+colnames(HotelData)
+```
+
+```{r}
+Hotel = names(HotelData) %in% c("hotel")
+HotelDataSansHotel= HotelData[!Hotel]
+```
+Distributions
+
+Normal Q-Q Plots
+```{r}
+par(mar=c(.5,.5,.5,.5))
+par(mfrow=c(13,2))
+qqnorm(HotelDataSansHotel$lead_time, main="lead_time")
+qqnorm(HotelDataSansHotel$arrival_date_year, main="arrival_date_year")
+#qqnorm(HotelDataSansHotel$arrival_date_month, main="lead_time")
+qqnorm(HotelDataSansHotel$arrival_date_week_number, main="arrival_date_week_number")
+qqnorm(HotelDataSansHotel$arrival_date_day_of_month, main="arrival_date_day_of_month")
+
+qqnorm(HotelDataSansHotel$stays_in_weekend_nights, main="stays_in_weekend_nights")
+qqnorm(HotelDataSansHotel$stays_in_week_nights, main="stays_in_week_nights")
+qqnorm(HotelDataSansHotel$adults, main="adults")
+qqnorm(HotelDataSansHotel$children, main="children")
+qqnorm(HotelDataSansHotel$babies, main="babies")
+
+#qqnorm(HotelDataSansHotel$meal)
+#qqnorm(HotelDataSansHotel$market_segment)
+#qqnorm(HotelDataSansHotel$distribution_channel)
+qqnorm(HotelDataSansHotel$is_repeated_guest, main="is_repeated_guest")
+qqnorm(HotelDataSansHotel$previous_cancellations, main="previous_cancellations")
+
+qqnorm(HotelDataSansHotel$previous_bookings_not_canceled, main="previous_bookings_not_canceled")
+#qqnorm(HotelDataSansHotel$reserved_room_type)
+#qqnorm(HotelDataSansHotel$assigned_room_type)
+qqnorm(HotelDataSansHotel$booking_changes, main="booking_changes")
+#qqnorm(HotelDataSansHotel$deposit_type)
+
+qqnorm(HotelDataSansHotel$days_in_waiting_list, main="days_in_waiting_list")
+#qqnorm(HotelDataSansHotel$customer_type)
+qqnorm(HotelDataSansHotel$adr, main="adr")
+qqnorm(HotelDataSansHotel$required_car_parking_spaces, main="required_car_parking_spacese")
+qqnorm(HotelDataSansHotel$total_of_special_requests, main="total_of_special_requests")
+
+```
+Histograms
+```{r}
+library(rcompanion)
+par(mar=c(1,1,1,1))
+par(mfrow=c(9,3))
+
+plotNormalHistogram(HotelDataSansHotel$lead_time, main="lead_time")
+plotNormalHistogram(HotelDataSansHotel$arrival_date_year, main="arrival_date_year")
+plotNormalHistogram(HotelDataSansHotel$arrival_date_week_number, main="arrival_date_week_number")
+
+plotNormalHistogram(HotelDataSansHotel$arrival_date_day_of_month, main="arrival_date_day_of_month")
+plotNormalHistogram(HotelDataSansHotel$stays_in_weekend_nights, main="stays_in_weekend_nights")
+plotNormalHistogram(HotelDataSansHotel$stays_in_week_nights, main="stays_in_week_nights")
+
+plotNormalHistogram(HotelDataSansHotel$adults, main="adults")
+plotNormalHistogram(HotelDataSansHotel$children, main="children")
+plotNormalHistogram(HotelDataSansHotel$babies, main="babies")
+
+plotNormalHistogram(HotelDataSansHotel$is_repeated_guest, main="is_repeated_guest")
+plotNormalHistogram(HotelDataSansHotel$previous_cancellations, main="previous_cancellations")
+plotNormalHistogram(HotelDataSansHotel$previous_bookings_not_canceled, main="previous_bookings_not_canceled")
+
+plotNormalHistogram(HotelDataSansHotel$booking_changes, main="booking_changes")
+plotNormalHistogram(HotelDataSansHotel$days_in_waiting_list, main="days_in_waiting_list")
+plotNormalHistogram(HotelDataSansHotel$adr, main="adr")
+
+plotNormalHistogram(HotelDataSansHotel$required_car_parking_spaces, main="required_car_parking_spacese")
+plotNormalHistogram(HotelDataSansHotel$total_of_special_requests, main="total_of_special_requests")
+
+
+```
+
+Variables with binomial or numeric values:
+```{r}
+#subset to include only binomial and numeric variables
+nonNumericVariables = names(HotelData) %in% c("hotel", "arrival_date_month", "meal", "country", "market_segment", "distribution_channel", "reserved_room_type", "assigned_room_type", "deposit_type", "agent", "company", "customer_type", "reservation_status", "reservation_status_date")
+HotelDataSubset=HotelData[!nonNumericVariables]
+colnames(HotelDataSubset)
+
+```
+
+
+```{r}
+#drop rows with missing values (4 NAN values in children attribute)
+library(tidyr)
+HotelDataNumericSansNAN = drop_na(HotelDataSubset)
+```
+
+**Predict hotel reservation cancelations**
+Logistic Regression: numeric and binomial predictor variables, is_canceled as response variable.
+```{r}
+#logistic regression model
+HotelDataNumeric.lr = glm(is_canceled~ . ,family=binomial,data=HotelDataNumericSansNAN)
+
+#confusion matrix and accuracy (Dr. Cutler's way)
+table(HotelDataNumericSansNAN$is_canceled,round(predict(HotelDataNumeric.lr,type="response")))
+class.sum(HotelDataNumericSansNAN$is_canceled,predict(HotelDataNumeric.lr,type="response"))
+```
+```{r}
+#library(caret)
+##glm model
+#HotelDataNumeric.lr = glm(is_canceled~ . , data=HotelDataNumericSansNAN,family=binomial())
+##use model to make predictions
+#glub = predict(HotelDataNumeric.lr, type ="response")
+##display confusion matrix and accuracy
+#confusionMatrix(data = glub, reference = HotelDataNumericSansNAN$is_canceled)
+```
+
+Stepwise variable selection:
+```{r}
+#logistic regression model
+HotelDataNumeric.lr = glm(is_canceled~ . ,family=binomial,data=HotelDataNumericSansNAN)
+step.model=stepAIC(HotelDataNumeric.lr, direction = "both", trace = FALSE)
+summary(step.model)
+step.model
+class.sum(HotelDataNumericSansNAN$is_canceled,predict(step.model,type="response"))
+```
+Logistic Regression with Variables Selected with Stepwise AIC.
+```{r}
+#logistic regression model
+HotelDataNumeric.lr = glm(is_canceled~ lead_time + arrival_date_year + arrival_date_week_number + 
+    stays_in_weekend_nights + adults + children + babies + is_repeated_guest + 
+    previous_cancellations + previous_bookings_not_canceled + 
+    booking_changes + days_in_waiting_list + adr + required_car_parking_spaces + 
+    total_of_special_requests ,family=binomial,data=HotelDataNumericSansNAN)
+
+#confusion matrix and accuracy (Dr. Cutler's way)
+table(HotelDataNumericSansNAN$is_canceled,round(predict(HotelDataNumeric.lr,type="response")))
+class.sum(HotelDataNumericSansNAN$is_canceled,predict(HotelDataNumeric.lr,type="response"))
+```
+
+Cross-validated Logistic Regression with Variables from Stepwise AIC:
+```{r}
+HotelDataNumeric.lr.xval=rep(0,nrow(HotelDataNumericSansNAN))
+xvs=rep(1:10,length=nrow(HotelDataNumericSansNAN))
+xvs=sample(xvs)
+for(i in 1:10){
+    train=HotelDataNumericSansNAN[xvs!=i,]
+    test=HotelDataNumericSansNAN[xvs==i,]
+    glub=glm(is_canceled~ lead_time + arrival_date_year + arrival_date_week_number + 
+    stays_in_weekend_nights + adults + children + babies + is_repeated_guest + 
+    previous_cancellations + previous_bookings_not_canceled + 
+    booking_changes + days_in_waiting_list + adr + required_car_parking_spaces + 
+    total_of_special_requests ,family=binomial,data=train)
+    HotelDataNumeric.lr.xval[xvs==i]=predict(glub,test,type="response")
+}
+table(HotelDataNumericSansNAN$is_canceled,round(HotelDataNumericSansNAN.lr.xval))
+class.sum(HotelDataNumericSansNAN$is_canceled,HotelDataNumericSansNAN.lr.xval)
+```
+
+***Are resort hotels and city hotels significantly different enough to warrant different prediction models?***
+```{r}
+#separate resort hotel rows from city hotel rows
+resortHotel=HotelData[1:40060,1:32]
+cityHotel=HotelData[40061:119390,1:32]
+summary(resortHotel)
+```
+
+```{r}
+unique(resortHotel$hotel)
+```
+
+
+```{r}
+summary(cityHotel)
+```
+

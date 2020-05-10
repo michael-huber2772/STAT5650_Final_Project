@@ -1,0 +1,75 @@
+---
+title: "Classification"
+author: "varsha"
+date: "4/22/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+```{r}
+library(rpart)
+library(verification)
+set.seed(5431)
+```
+
+```{r}
+#hotel as response variable
+Hotel_data<- read.csv(file = "B:/Spring 2020/STAT learning/Stat project_1/STAT5650_Final_Project/Varsha/hotelchanged.csv")
+names(Hotel_data)
+summary(Hotel_data)
+dim(Hotel_data)
+
+
+
+Hotel_data.rpartfull=rpart(hotel~.,data=Hotel_data,method="class",control=rpart.control(cp=0.0,minsplit=2))
+plotcp(Hotel_data.rpartfull)
+printcp(Hotel_data.rpartfull)
+```
+
+```{r}
+
+Hotel_data.rpartfull=rpart(hotel~.,data=Hotel_data,method="class",control=rpart.control(cp=0.0,minsplit=2))
+plotcp(Hotel_data.rpartfull)
+printcp(Hotel_data.rpartfull)
+
+Hotel_data.cp1=rpart(hotel~.,data=Hotel_data,method="class",control=rpart.control(cp=4.7113e-05 ,minsplit=2))
+plotcp(Hotel_data.cp1)
+printcp(Hotel_data.cp1)
+
+
+```
+
+```{r}
+
+Hotel_data.cp1confuse=table(Hotel_data$hotel,predict(Hotel_data.cp1,type="class"))
+Hotel_data.cp1confuse
+100*sum(diag(Hotel_data.cp1confuse))/119386
+
+```
+
+```{r}
+set.seed(5341)
+Hotel_data.cp1confuse=table(Hotel_data$hotel,predict(Hotel_data.cp1,type="class"))
+Hotel_data.cp1confuse
+100*sum(diag(Hotel_data.cp1confuse))/119386
+
+
+Hotel_data.cp1.xval=rep(0,nrow(Hotel_data))
+xvs=rep(1:10,length=nrow(Hotel_data))
+xvs=sample(xvs)
+for(i in 1:10){
+    test=Hotel_data[xvs==i,]
+    train=Hotel_data[xvs!=i,]
+    glub=rpart(hotel ~ . ,control=rpart.control(cp=4.7113e-05, minsplit=2),data=train)
+    Hotel_data.cp1.xval[xvs==i]=predict(glub,test,type="class")
+}
+Hotel_data.cp1confuse.xval=table(Hotel_data$hotel,Hotel_data.cp1.xval)
+Hotel_data.cp1confuse.xval
+100*sum(diag(Hotel_data.cp1.xval))/119386
+```
+
